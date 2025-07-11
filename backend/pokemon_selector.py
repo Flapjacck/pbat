@@ -1,55 +1,107 @@
 import requests
 import random
 import json
+import urllib3
+import ssl
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+# Disable SSL warnings for environments with SSL issues
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class PokemonSelector:
     def __init__(self):
-        self.base_url = "https://pokeapi.co/api/v2/"
+        # Try HTTP first to avoid SSL issues
+        self.base_url = "http://pokeapi.co/api/v2/"
+        self.https_url = "https://pokeapi.co/api/v2/"
         self.stats = ["hp", "attack", "defense", "special-attack", "special-defense", "speed"]
         
-        # Configure session with better SSL handling
+        # Configure session with minimal SSL requirements
         self.session = requests.Session()
+        
+        # Disable SSL verification completely
+        self.session.verify = False
+        
+        # Set basic headers
         self.session.headers.update({
-            'User-Agent': 'Pokemon-Selector/1.0',
-            'Accept': 'application/json'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache'
         })
     
     def get_pokemon_data(self, pokemon_name):
-        """Fetch Pokemon data from PokeAPI"""
+        """Fetch Pokemon data from PokeAPI with multiple URL strategies"""
+        pokemon_name = pokemon_name.lower()
+        
+        # Strategy 1: Try HTTP (no SSL)
         try:
-            url = f"{self.base_url}pokemon/{pokemon_name.lower()}"
-            print(f"Connecting to: {url}")
-            
-            # Try with SSL verification first
-            try:
-                response = self.session.get(url, timeout=15, verify=True)
-                response.raise_for_status()
-                return response.json()
-            except requests.exceptions.SSLError:
-                print("SSL verification failed, trying without SSL verification...")
-                # Retry without SSL verification
-                response = self.session.get(url, timeout=15, verify=False)
-                response.raise_for_status()
-                return response.json()
-                
+            url = f"{self.base_url}pokemon/{pokemon_name}"
+            print(f"Trying HTTP: {url}")
+            response = self.session.get(url, timeout=15)
+            response.raise_for_status()
+            print("✓ Connected successfully via HTTP")
+            return response.json()
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 404:
-                print(f"Pokemon '{pokemon_name}' not found. Check the spelling and try again.")
-            else:
-                print(f"HTTP error {e.response.status_code}: {e}")
-            return None
-        except requests.exceptions.Timeout:
-            print("Connection timeout. Please check your internet connection and try again.")
-            return None
-        except requests.exceptions.ConnectionError:
-            print("Connection error. Please check your internet connection and try again.")
-            return None
-        except requests.exceptions.RequestException as e:
-            print(f"Network error: {e}")
-            return None
+                print(f"❌ Pokemon '{pokemon_name}' not found (404). Check spelling.")
+                return None
+            print(f"⚠ HTTP error {e.response.status_code}, trying HTTPS...")
         except Exception as e:
-            print(f"Unexpected error: {e}")
-            return None
+            print(f"⚠ HTTP failed: {e}")
+            print("Trying HTTPS...")
+        
+        # Strategy 2: Try HTTPS with no SSL verification
+        try:
+            url = f"{self.https_url}pokemon/{pokemon_name}"
+            print(f"Trying HTTPS (no SSL verify): {url}")
+            response = requests.get(url, timeout=15, verify=False, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            response.raise_for_status()
+            print("✓ Connected successfully via HTTPS (no SSL)")
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                print(f"❌ Pokemon '{pokemon_name}' not found (404). Check spelling.")
+                return None
+            print(f"❌ HTTPS error {e.response.status_code}")
+        except Exception as e:
+            print(f"❌ HTTPS failed: {e}")
+        
+        # Strategy 3: Try with urllib directly (lower level)
+        try:
+            import urllib.request
+            import urllib.error
+            import ssl
+            
+            # Create SSL context that ignores certificate errors
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            url = f"{self.https_url}pokemon/{pokemon_name}"
+            print(f"Trying urllib with custom SSL: {url}")
+            
+            req = urllib.request.Request(url, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            
+            with urllib.request.urlopen(req, context=ssl_context, timeout=15) as response:
+                data = response.read()
+                print("✓ Connected successfully via urllib")
+                return json.loads(data.decode('utf-8'))
+                
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                print(f"❌ Pokemon '{pokemon_name}' not found (404). Check spelling.")
+                return None
+            print(f"❌ urllib HTTPError {e.code}")
+        except Exception as e:
+            print(f"❌ urllib failed: {e}")
+        
+        print("❌ All connection methods failed")
+        return None
     
     def get_pokemon_moves(self, pokemon_data):
         """Extract available moves from Pokemon data"""
@@ -208,10 +260,66 @@ class PokemonSelector:
         
         print("="*50)
     
+    def test_connection(self):
+        """Test connection to PokeAPI"""
+        print("Testing connection to PokeAPI...")
+        
+        # Test 1: Try HTTP first
+        try:
+            response = requests.get("http://pokeapi.co/api/v2/pokemon/1", timeout=10, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            if response.status_code == 200:
+                print("✓ PokeAPI is accessible via HTTP")
+                return True
+        except Exception as e:
+            print(f"⚠ HTTP test failed: {e}")
+        
+        # Test 2: Try HTTPS without SSL verification
+        try:
+            response = requests.get("https://pokeapi.co/api/v2/pokemon/1", timeout=10, verify=False, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            if response.status_code == 200:
+                print("✓ PokeAPI is accessible via HTTPS (no SSL)")
+                return True
+        except Exception as e:
+            print(f"⚠ HTTPS test failed: {e}")
+        
+        # Test 3: Try with urllib
+        try:
+            import urllib.request
+            import ssl
+            
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            req = urllib.request.Request("https://pokeapi.co/api/v2/pokemon/1", headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            
+            with urllib.request.urlopen(req, context=ssl_context, timeout=10) as response:
+                if response.status == 200:
+                    print("✓ PokeAPI is accessible via urllib")
+                    return True
+        except Exception as e:
+            print(f"❌ urllib test failed: {e}")
+        
+        print("❌ Cannot connect to PokeAPI with any method")
+        print("Please check your internet connection or network firewall settings.")
+        return False
+    
     def run(self):
         """Main application loop"""
         print("Welcome to the Pokemon Selector!")
         print("This app fetches Pokemon data from PokeAPI.")
+        
+        # Test connection first
+        if not self.test_connection():
+            print("\n❌ Unable to connect to PokeAPI. Please check your internet connection and try again.")
+            return
+        
         print("Type 'quit' to exit the program.")
         
         while True:
@@ -234,7 +342,7 @@ class PokemonSelector:
                 print("Please try again with a different Pokemon name.")
                 continue
             
-            print(f"Found {pokemon_data['name'].capitalize()}!")
+            print(f"✓ Found {pokemon_data['name'].capitalize()}!")
             
             # Get available moves
             available_moves = self.get_pokemon_moves(pokemon_data)
