@@ -19,21 +19,8 @@ class PokemonBattlePipeline:
     
     def display_welcome(self):
         """Display welcome message and instructions"""
-        print("=" * 80)
-        print("🔥 POKEMON BATTLE ARENA 🔥")
-        print("=" * 80)
-        print("Welcome to the ultimate Pokemon battle experience!")
-        print("\nThis application will:")
-        print("1. Help you select and customize Pokemon")
-        print("2. Simulate epic battles between your chosen Pokemon")
-        print("3. Use real Pokemon data from PokeAPI")
-        print("\nFeatures:")
-        print("- Real Pokemon stats, types, and moves")
-        print("- Custom IV/EV training")
-        print("- Type effectiveness calculations")
-        print("- Status conditions and battle mechanics")
-        print("- Turn-based battle system")
-        print("=" * 80)
+        print("Welcome to Pokemon Battle Arena!")
+        print("Choose your Pokemon and start battling!")
     
     def test_api_connection(self) -> bool:
         """Test connection to PokeAPI before starting"""
@@ -88,6 +75,11 @@ class PokemonBattlePipeline:
         print("-" * 40)
         moves = self.get_pokemon_moves(available_moves)
         
+        # Get Held Item
+        print(f"\n📦 HELD ITEM SELECTION FOR {pokemon_data['name'].upper()}")
+        print("-" * 40)
+        held_item = self.get_held_item()
+        
         # Create Pokemon object
         pokemon = Pokemon(
             name=pokemon_data['name'],
@@ -95,7 +87,8 @@ class PokemonBattlePipeline:
             ivs=ivs,
             evs=evs,
             moves=moves,
-            level=level
+            level=level,
+            held_item=held_item
         )
         
         # Display final summary
@@ -122,15 +115,15 @@ class PokemonBattlePipeline:
     def get_pokemon_ivs(self) -> dict:
         """Get IVs with enhanced options"""
         print("Choose IV selection method:")
-        print("1. Random IVs")
+        print("r. Random IVs")
         print("2. Perfect IVs (all 31)")
         print("3. Manual entry")
         print("4. Competitive preset (31 in important stats)")
         
         while True:
-            choice = input("Enter choice (1-4): ").strip()
+            choice = input("Enter choice (r, 2-4): ").strip().lower()
             
-            if choice == "1":
+            if choice == "r":
                 ivs = self.selector.generate_random_ivs()
                 print("🎲 Random IVs generated!")
                 self.display_ivs(ivs)
@@ -167,20 +160,20 @@ class PokemonBattlePipeline:
                 return ivs
             
             else:
-                print("Please enter 1, 2, 3, or 4.")
+                print("Please enter r, 2, 3, or 4.")
     
     def get_pokemon_evs(self) -> dict:
         """Get EVs with enhanced options"""
         print("Choose EV selection method:")
-        print("1. Random EVs")
+        print("r. Random EVs")
         print("2. No EVs (all 0)")
         print("3. Manual entry")
         print("4. Competitive presets")
         
         while True:
-            choice = input("Enter choice (1-4): ").strip()
+            choice = input("Enter choice (r, 2-4): ").strip().lower()
             
-            if choice == "1":
+            if choice == "r":
                 evs = self.selector.generate_random_evs()
                 print("🎲 Random EVs generated!")
                 self.display_evs(evs)
@@ -198,7 +191,7 @@ class PokemonBattlePipeline:
                 return self.get_competitive_ev_preset()
             
             else:
-                print("Please enter 1, 2, 3, or 4.")
+                print("Please enter r, 2, 3, or 4.")
     
     def get_competitive_ev_preset(self) -> dict:
         """Get competitive EV presets"""
@@ -246,14 +239,14 @@ class PokemonBattlePipeline:
             print("... and more")
         
         print("\nMove selection options:")
-        print("1. Random 4 moves")
+        print("r. Random 4 moves")
         print("2. Manual selection")
         print("3. Show all moves and select")
         
         while True:
-            choice = input("Enter choice (1-3): ").strip()
+            choice = input("Enter choice (r, 2-3): ").strip().lower()
             
-            if choice == "1":
+            if choice == "r":
                 moves = self.selector.get_user_moves(available_moves)
                 # Override to make it random
                 import random
@@ -275,7 +268,7 @@ class PokemonBattlePipeline:
                 return self.selector.get_user_moves(available_moves)
             
             else:
-                print("Please enter 1, 2, or 3.")
+                print("Please enter r, 2, or 3.")
     
     def display_ivs(self, ivs: dict):
         """Display IV summary"""
@@ -301,6 +294,9 @@ class PokemonBattlePipeline:
         print(f"Level: {pokemon.level}")
         print(f"Types: {', '.join(pokemon.types).title()}")
         print(f"HP: {pokemon.max_hp}")
+        
+        if pokemon.held_item:
+            print(f"Held Item: {pokemon.held_item.replace('-', ' ').title()}")
         
         print("\nFinal Stats:")
         for stat_name, value in pokemon.stats.items():
@@ -378,11 +374,9 @@ class PokemonBattlePipeline:
             print("=" * 30)
             print("1. Quick Battle (2 random Pokemon)")
             print("2. Custom Battle (select both Pokemon)")
-            print("3. Single Pokemon Builder")
-            print("4. Tournament Mode (coming soon)")
-            print("5. Exit")
+            print("3. Exit")
             
-            choice = input("Enter choice (1-5): ").strip()
+            choice = input("Enter choice (1-3): ").strip()
             
             if choice == "1":
                 self.quick_battle()
@@ -391,19 +385,12 @@ class PokemonBattlePipeline:
                 self.custom_battle()
             
             elif choice == "3":
-                self.single_pokemon_builder()
-            
-            elif choice == "4":
-                print("🚧 Tournament mode coming in a future update!")
-                input("Press Enter to continue...")
-            
-            elif choice == "5":
                 print("\n👋 Thanks for using Pokemon Battle Arena!")
                 print("May your battles be legendary!")
                 break
             
             else:
-                print("Please enter 1, 2, 3, 4, or 5.")
+                print("Please enter 1, 2, or 3.")
     
     def quick_battle(self):
         """Quick battle with simplified setup"""
@@ -441,7 +428,8 @@ class PokemonBattlePipeline:
                 ivs=self.selector.generate_random_ivs(),
                 evs=self.selector.generate_random_evs(),
                 moves=random.sample(available_moves, min(4, len(available_moves))),
-                level=50
+                level=50,
+                held_item=random.choice([None, 'leftovers', 'life-orb', 'choice-band', 'focus-sash', 'expert-belt'])
             )
             pokemon_list.append(pokemon)
             print(f"✅ {pokemon.name} ready!")
@@ -486,6 +474,93 @@ class PokemonBattlePipeline:
             print(f"  {stat_name.replace('-', ' ').title()}: {base_stat} → {final_stat} (IV: {iv}, EV: {ev})")
         
         input("\nPress Enter to continue...")
+    
+    def get_held_item(self) -> str:
+        """Get held item selection from user"""
+        print("Choose held item option:")
+        print("1. No held item")
+        print("2. Competitive items (Choice Band, Life Orb, etc.)")
+        print("3. Utility items (Leftovers, Focus Sash, etc.)")
+        print("4. Random item")
+        print("5. Manual entry")
+        
+        while True:
+            choice = input("Enter choice (1-5): ").strip()
+            
+            if choice == "1":
+                return None
+            
+            elif choice == "2":
+                return self.get_competitive_item()
+            
+            elif choice == "3":
+                return self.get_utility_item()
+            
+            elif choice == "4":
+                items = ['leftovers', 'life-orb', 'choice-band', 'choice-specs', 'choice-scarf',
+                        'focus-sash', 'assault-vest', 'expert-belt', 'muscle-band', 'wise-glasses']
+                import random
+                item = random.choice(items)
+                print(f"🎲 Random item selected: {item.replace('-', ' ').title()}")
+                return item
+            
+            elif choice == "5":
+                item_name = input("Enter held item name (or 'none' for no item): ").strip().lower()
+                if item_name in ['', 'none', 'no', 'nothing']:
+                    return None
+                return item_name.replace(' ', '-')
+            
+            else:
+                print("Please enter 1, 2, 3, 4, or 5.")
+    
+    def get_competitive_item(self) -> str:
+        """Get competitive held item selection"""
+        print("\nCompetitive Items:")
+        print("1. Choice Band (+50% Attack, locked into one move)")
+        print("2. Choice Specs (+50% Sp. Attack, locked into one move)")
+        print("3. Choice Scarf (+50% Speed, locked into one move)")
+        print("4. Life Orb (+30% damage, 10% recoil)")
+        print("5. Assault Vest (+50% Sp. Defense, no status moves)")
+        print("6. Expert Belt (+20% super effective damage)")
+        
+        items = {
+            '1': 'choice-band', '2': 'choice-specs', '3': 'choice-scarf',
+            '4': 'life-orb', '5': 'assault-vest', '6': 'expert-belt'
+        }
+        
+        while True:
+            choice = input("Choose item (1-6): ").strip()
+            if choice in items:
+                item = items[choice]
+                print(f"🏆 {item.replace('-', ' ').title()} selected!")
+                return item
+            print("Please enter 1, 2, 3, 4, 5, or 6.")
+    
+    def get_utility_item(self) -> str:
+        """Get utility held item selection"""
+        print("\nUtility Items:")
+        print("1. Leftovers (heals 1/16 HP each turn)")
+        print("2. Focus Sash (survives KO at full HP)")
+        print("3. Focus Band (10% chance to survive any KO)")
+        print("4. Quick Claw (20% chance to move first)")
+        print("5. Muscle Band (+10% physical damage)")
+        print("6. Wise Glasses (+10% special damage)")
+        print("7. Flame Orb (burns holder)")
+        print("8. Toxic Orb (poisons holder)")
+        
+        items = {
+            '1': 'leftovers', '2': 'focus-sash', '3': 'focus-band',
+            '4': 'quick-claw', '5': 'muscle-band', '6': 'wise-glasses',
+            '7': 'flame-orb', '8': 'toxic-orb'
+        }
+        
+        while True:
+            choice = input("Choose item (1-8): ").strip()
+            if choice in items:
+                item = items[choice]
+                print(f"🔧 {item.replace('-', ' ').title()} selected!")
+                return item
+            print("Please enter 1, 2, 3, 4, 5, 6, 7, or 8.")
     
     def run(self):
         """Main application entry point"""
