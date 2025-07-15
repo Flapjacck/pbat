@@ -372,7 +372,7 @@ class PokemonBattlePipeline:
         while True:
             print(f"\n{'🏠 MAIN MENU'}")
             print("=" * 30)
-            print("1. Quick Battle (2 random Pokemon)")
+            print("1. Quick Battle (completely random Pokemon & stats)")
             print("2. Custom Battle (select both Pokemon)")
             print("3. Exit")
             
@@ -393,46 +393,60 @@ class PokemonBattlePipeline:
                 print("Please enter 1, 2, or 3.")
     
     def quick_battle(self):
-        """Quick battle with simplified setup"""
+        """Quick battle with completely random setup"""
         print("\n⚡ QUICK BATTLE MODE")
         print("=" * 30)
-        print("Enter two Pokemon names for a quick battle!")
-        print("(Random IVs/EVs and moves will be assigned)")
+        print("🎲 Generating completely random battle!")
+        print("(Random Pokemon, stats, moves, and everything!)")
         
-        # Get Pokemon names only
-        pokemon_names = []
-        for i in range(2):
-            while True:
-                name = input(f"Enter Pokemon {i+1} name: ").strip()
-                if name:
-                    pokemon_names.append(name)
-                    break
-                print("Please enter a Pokemon name.")
+        import random
         
-        # Create Pokemon with random stats
+        # Create Pokemon with completely random everything
         pokemon_list = []
-        for i, name in enumerate(pokemon_names):
-            print(f"\n🔍 Setting up {name}...")
-            pokemon_data = self.selector.get_pokemon_data(name)
+        for i in range(2):
+            print(f"\n🎲 Getting random Pokemon {i+1}...")
+            
+            # Get completely random Pokemon
+            pokemon_data = self.selector.get_random_pokemon()
             
             if not pokemon_data:
-                print(f"❌ Could not find {name}. Skipping quick battle.")
+                print(f"❌ Could not get random Pokemon. Skipping quick battle.")
                 return
             
             available_moves = self.selector.get_pokemon_moves(pokemon_data)
             
-            import random
+            # Random level between 30-70 for more variety
+            random_level = random.randint(30, 70)
+            
+            # Random held items (including None for no item)
+            possible_items = [
+                None, None, None,  # Higher chance for no item
+                'leftovers', 'life-orb', 'choice-band', 'choice-specs', 'choice-scarf',
+                'focus-sash', 'assault-vest', 'expert-belt', 'muscle-band', 'wise-glasses',
+                'flame-orb', 'toxic-orb', 'quick-claw', 'focus-band', 'rocky-helmet',
+                'black-sludge', 'mental-herb', 'white-herb', 'power-herb', 'heat-rock',
+                'damp-rock', 'smooth-rock', 'icy-rock', 'light-clay', 'grip-claw'
+            ]
+            
             pokemon = Pokemon(
                 name=pokemon_data['name'],
                 pokemon_data=pokemon_data,
                 ivs=self.selector.generate_random_ivs(),
                 evs=self.selector.generate_random_evs(),
                 moves=random.sample(available_moves, min(4, len(available_moves))),
-                level=50,
-                held_item=random.choice([None, 'leftovers', 'life-orb', 'choice-band', 'focus-sash', 'expert-belt'])
+                level=random_level,
+                held_item=random.choice(possible_items)
             )
             pokemon_list.append(pokemon)
-            print(f"✅ {pokemon.name} ready!")
+            
+            # Display what was randomly generated
+            held_item_display = pokemon.held_item.replace('-', ' ').title() if pokemon.held_item else "None"
+            print(f"✅ {pokemon.name.title()} (Level {pokemon.level}) ready!")
+            print(f"   Held Item: {held_item_display}")
+            print(f"   Types: {', '.join(pokemon.types).title()}")
+        
+        print(f"\n🥊 RANDOM BATTLE: {pokemon_list[0].name.title()} vs {pokemon_list[1].name.title()}!")
+        input("Press Enter to start the battle...")
         
         # Start battle
         self.battle_simulator.simulate_battle(pokemon_list[0], pokemon_list[1], auto_battle=True)

@@ -310,6 +310,33 @@ class PokemonSelector:
         print("Please check your internet connection or network firewall settings.")
         return False
     
+    def get_random_pokemon(self):
+        """Get a random Pokemon from the first 1010 Pokemon (original generations)"""
+        # Use Pokemon IDs 1-1010 to cover most generations but avoid newer forms
+        random_id = random.randint(1, 1010)
+        
+        print(f"🎲 Getting random Pokemon #{random_id}...")
+        
+        # Try to get the Pokemon data using the ID
+        pokemon_data = self.get_pokemon_data(str(random_id))
+        if pokemon_data:
+            print(f"✅ Random Pokemon: {pokemon_data['name'].capitalize()}!")
+            return pokemon_data
+        else:
+            # If that ID doesn't work, try a few more times
+            for _ in range(3):
+                random_id = random.randint(1, 800)  # Fallback to more reliable range
+                pokemon_data = self.get_pokemon_data(str(random_id))
+                if pokemon_data:
+                    print(f"✅ Random Pokemon: {pokemon_data['name'].capitalize()}!")
+                    return pokemon_data
+        
+        # Final fallback to some known Pokemon
+        fallback_pokemon = ['pikachu', 'charizard', 'blastoise', 'venusaur', 'alakazam', 'machamp']
+        fallback_name = random.choice(fallback_pokemon)
+        print(f"🔄 Using fallback Pokemon: {fallback_name}")
+        return self.get_pokemon_data(fallback_name)
+    
     def run(self):
         """Main application loop"""
         print("Welcome to the Pokemon Selector!")
