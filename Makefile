@@ -42,6 +42,9 @@ APP_TITLE       := app
 APP_DESCRIPTION := Hello World
 APP_AUTHOR      := sk
 
+# Disable SMDH generation to avoid icon file requirement
+NO_SMDH         := 1
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -51,7 +54,7 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
+CFLAGS	+=	$(INCLUDE) -D__3DS__
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
