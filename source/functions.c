@@ -199,7 +199,6 @@ int offer_insurance(int bet_amount, Hand *dealer_hand) {
 GameAction handle_player_turn(Deck *deck, Hand *player_hand, int cash, int bet_amount) {
     while (!player_hand->stop && !is_busted(player_hand)) {
         printf("\nPlayer's turn:\n");
-        display_hand(player_hand);
         
         // Check if player can double down (only on first turn with 2 cards)
         int can_double = (player_hand->num_cards == 2 && cash >= bet_amount);
