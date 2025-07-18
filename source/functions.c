@@ -196,7 +196,7 @@ int offer_insurance(int bet_amount, Hand *dealer_hand) {
     return 0;
 }
 
-GameAction handle_player_turn(Deck *deck, Hand *player_hand, int cash, int bet_amount) {
+GameAction handle_player_turn(Deck *deck, Hand *player_hand, Hand *dealer_hand, int cash, int bet_amount) {
     while (!player_hand->stop && !is_busted(player_hand)) {
         printf("\nPlayer's turn:\n");
         
@@ -210,6 +210,9 @@ GameAction handle_player_turn(Deck *deck, Hand *player_hand, int cash, int bet_a
                 printf("Player hits!\n");
                 add_card_to_hand(deck, player_hand);
                 calculate_hand_value(player_hand);
+                
+                // Refresh the entire game display with updated hands
+                display_game_status(cash, bet_amount, player_hand, dealer_hand, 1);
                 
                 // Check for bust
                 if (is_busted(player_hand)) {
@@ -236,6 +239,9 @@ GameAction handle_player_turn(Deck *deck, Hand *player_hand, int cash, int bet_a
                     calculate_hand_value(player_hand);
                     player_hand->doubled = 1;
                     player_hand->stop = 1;
+                    
+                    // Refresh the entire game display with updated hands
+                    display_game_status(cash, bet_amount * 2, player_hand, dealer_hand, 1);
                     
                     if (is_busted(player_hand)) {
                         player_hand->bust = 1;

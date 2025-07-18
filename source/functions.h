@@ -75,7 +75,7 @@ int offer_insurance(int bet_amount, Hand *dealer_hand);
 // - cash: Current cash (for double down validation)
 // - bet_amount: Current bet amount
 // Returns the action taken
-GameAction handle_player_turn(Deck *deck, Hand *player_hand, int cash, int bet_amount);
+GameAction handle_player_turn(Deck *deck, Hand *player_hand, Hand *dealer_hand, int cash, int bet_amount);
 
 // Calculates and updates hand value, handling Ace soft/hard values
 // Aces count as 11 unless that would bust, then they count as 1

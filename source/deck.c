@@ -62,8 +62,7 @@ void init_decks(Deck *deck, int num_decks) {
                 deck->cards[deck_index].suit = cardSuits[s];
                 deck->cards[deck_index].hidden = 0; // Default to visible
                 
-                // Allocate and set card sign (display character)
-                deck->cards[deck_index].sign = malloc(3 * sizeof(char));
+                // Copy card sign (display character) into the fixed array
                 strcpy(deck->cards[deck_index].sign, cardSigns[f]);
                 
                 // Set card value and ace flag based on face value
@@ -181,7 +180,7 @@ void cut_card(Deck *deck) {
 
 Card deal_card(Deck *deck) {
     // Create a null card to return in case of error
-    Card null_card = {NULL, NULL, NULL, 0, 0, 0};
+    Card null_card = {NULL, NULL, "", 0, 0, 0};
     
     if (deck == NULL || deck->cards == NULL || deck->size == 0) {
         printf("Error: Cannot deal from empty or invalid deck\n");
@@ -231,16 +230,8 @@ void cleanup_deck(Deck *deck) {
         return;
     }
     
-    // Free allocated memory for each card's sign string
+    // Free the cards array (no need to free sign strings anymore)
     if (deck->cards != NULL) {
-        for (int i = 0; i < deck->size; i++) {
-            if (deck->cards[i].sign != NULL) {
-                free(deck->cards[i].sign);
-                deck->cards[i].sign = NULL; // Prevent double-free
-            }
-        }
-        
-        // Free the entire cards array
         free(deck->cards);
         deck->cards = NULL; // Prevent double-free
     }

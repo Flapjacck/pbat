@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
             }
         } else {
             // Normal gameplay - player's turn
-            GameAction result = handle_player_turn(&deck, &player_hand, cash, bet_amount);
+            GameAction result = handle_player_turn(&deck, &player_hand, &dealer_hand, cash, bet_amount);
             
             if (result == ACTION_QUIT) {
                 break; // Exit game

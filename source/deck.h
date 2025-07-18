@@ -25,7 +25,7 @@
 typedef struct {
 	const char *face;
 	const char *suit;
-	char *sign; // Letter symbol (A, 2-9, T, J, Q, K)
+	char sign[3]; // Letter symbol (A, 2-9, T, J, Q, K) - fixed size array
 	int value; // Value of card
 	int is_ace; // 1 if ace, 0 if not
 	int hidden; // 1 if hidden, 0 if visible
