@@ -124,11 +124,14 @@ void deal_initial_cards(Deck *deck, Hand *player_hand, Hand *dealer_hand) {
     strcpy(dealer_hand->name, "Dealer");
     
     printf("Dealing initial cards...\n");
+    printf("Debug: About to deal first card to player\n");
     
     // Deal first card to player
     add_card_to_hand(deck, player_hand);
+    printf("Debug: First card dealt to player\n");
     
     // Deal first card to dealer (hidden)
+    printf("Debug: About to deal first card to dealer\n");
     Card dealer_first = deal_card(deck);
     dealer_first.hidden = 1; // Hide dealer's first card
     dealer_hand->cards[dealer_hand->num_cards] = dealer_first;
@@ -136,10 +139,14 @@ void deal_initial_cards(Deck *deck, Hand *player_hand, Hand *dealer_hand) {
     printf("Dealer receives hidden card\n");
     
     // Deal second card to player
+    printf("Debug: About to deal second card to player\n");
     add_card_to_hand(deck, player_hand);
+    printf("Debug: Second card dealt to player\n");
     
     // Deal second card to dealer (visible)
+    printf("Debug: About to deal second card to dealer\n");
     add_card_to_hand(deck, dealer_hand);
+    printf("Debug: Second card dealt to dealer\n");
     
     // Calculate initial values
     calculate_hand_value(player_hand);
@@ -412,30 +419,34 @@ void handle_dealer_turn(Deck *deck, Hand *dealer_hand) {
 }
 
 void clear_hands(Hand *player_hand, Hand *dealer_hand) {
-    // Free allocated memory
-    if (player_hand->cards != NULL) {
+    // Free allocated memory only if it was allocated
+    if (player_hand != NULL && player_hand->cards != NULL) {
         free(player_hand->cards);
         player_hand->cards = NULL;
     }
-    if (dealer_hand->cards != NULL) {
+    if (dealer_hand != NULL && dealer_hand->cards != NULL) {
         free(dealer_hand->cards);
         dealer_hand->cards = NULL;
     }
     
-    // Reset all values
-    player_hand->num_cards = 0;
-    player_hand->value = 0;
-    player_hand->doubled = 0;
-    player_hand->bust = 0;
-    player_hand->natural_bj = 0;
-    player_hand->stop = 0;
+    // Reset all values only if pointers are valid
+    if (player_hand != NULL) {
+        player_hand->num_cards = 0;
+        player_hand->value = 0;
+        player_hand->doubled = 0;
+        player_hand->bust = 0;
+        player_hand->natural_bj = 0;
+        player_hand->stop = 0;
+    }
     
-    dealer_hand->num_cards = 0;
-    dealer_hand->value = 0;
-    dealer_hand->doubled = 0;
-    dealer_hand->bust = 0;
-    dealer_hand->natural_bj = 0;
-    dealer_hand->stop = 0;
+    if (dealer_hand != NULL) {
+        dealer_hand->num_cards = 0;
+        dealer_hand->value = 0;
+        dealer_hand->doubled = 0;
+        dealer_hand->bust = 0;
+        dealer_hand->natural_bj = 0;
+        dealer_hand->stop = 0;
+    }
 }
 
 int is_busted(Hand *hand) {

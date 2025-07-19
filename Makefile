@@ -30,17 +30,17 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-TARGET		:=	hello_world
+TARGET		:=	pbat
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source source/blackjack source/roulette
 DATA		:=	data
-INCLUDES	:=	include
+INCLUDES	:=	include source/blackjack source/roulette
 GRAPHICS	:=	gfx
 #GFXBUILD	:=	$(BUILD)
 
-APP_TITLE       := app
-APP_DESCRIPTION := Hello World
-APP_AUTHOR      := sk
+APP_TITLE       := PBAT Casino
+APP_DESCRIPTION := Portable Betting and Table games
+APP_AUTHOR      := Flapjacck
 
 # Disable SMDH generation to avoid icon file requirement
 NO_SMDH         := 1
