@@ -1,6 +1,6 @@
-# 3ds BlackJack
+# 3ds casino
 
-A simple blackjack game for the Nintendo 3DS ran on the homebrew launcher.
+A simple casino game collection for the Nintendo 3DS ran on the homebrew launcher.
 
 ## stack
 
