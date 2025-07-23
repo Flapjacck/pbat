@@ -353,11 +353,13 @@ int get_bet_amount() {
         
         if (kDown & KEY_UP && amount < 50) {
             amount++;
-            printf("\x1b[1A\x1b[KCurrent amount: %d\n", amount);
+            printf("\x1b[2A\x1b[KCurrent amount: %d\n", amount);
+            printf("Press A to confirm, B to cancel\n");
         }
         if (kDown & KEY_DOWN && amount > 1) {
             amount--;
-            printf("\x1b[1A\x1b[KCurrent amount: %d\n", amount);
+            printf("\x1b[2A\x1b[KCurrent amount: %d\n", amount);
+            printf("Press A to confirm, B to cancel\n");
         }
         if (kDown & KEY_A) {
             return amount;
@@ -387,20 +389,24 @@ int get_number_input() {
         if (kDown & KEY_RIGHT && number < 30) {
             number += 10;
             if (number > 36) number = 36;
-            printf("\x1b[1A\x1b[KCurrent number: %d\n", number);
+            printf("\x1b[2A\x1b[KCurrent number: %d\n", number);
+            printf("Press A to confirm, B to cancel\n");
         }
         if (kDown & KEY_LEFT && number >= 10) {
             number -= 10;
             if (number < 0) number = 0;
-            printf("\x1b[1A\x1b[KCurrent number: %d\n", number);
+            printf("\x1b[2A\x1b[KCurrent number: %d\n", number);
+            printf("Press A to confirm, B to cancel\n");
         }
         if (kDown & KEY_UP && number < 36) {
             number++;
-            printf("\x1b[1A\x1b[KCurrent number: %d\n", number);
+            printf("\x1b[2A\x1b[KCurrent number: %d\n", number);
+            printf("Press A to confirm, B to cancel\n");
         }
         if (kDown & KEY_DOWN && number > 0) {
             number--;
-            printf("\x1b[1A\x1b[KCurrent number: %d\n", number);
+            printf("\x1b[2A\x1b[KCurrent number: %d\n", number);
+            printf("Press A to confirm, B to cancel\n");
         }
         if (kDown & KEY_A) {
             return number;
