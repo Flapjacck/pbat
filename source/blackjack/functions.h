@@ -142,4 +142,34 @@ GameAction get_player_input(int can_double);
 // - hide_dealer_card: Whether to hide dealer's first card
 void display_game_status(int cash, int bet_amount, Hand *player_hand, Hand *dealer_hand, int hide_dealer_card);
 
+// Displays the cards in a hand with ASCII art representation on a specific screen
+// Hidden cards show as face-down
+// Parameters:
+// - hand: Hand to display
+// - screen: Screen target (GFX_TOP or GFX_BOTTOM)
+void display_hand_dual_screen(Hand *hand, gfxScreen_t screen);
+
+// Displays game status using dual screens - dealer on top, player on bottom
+// Parameters:
+// - cash: Current cash amount
+// - bet_amount: Current bet amount
+// - player_hand: Player's hand
+// - dealer_hand: Dealer's hand
+// - hide_dealer_card: Whether to hide dealer's first card
+void display_game_status_dual_screen(int cash, int bet_amount, Hand *player_hand, Hand *dealer_hand, int hide_dealer_card);
+
+// Clears a specific screen
+// Parameters:
+// - screen: Screen to clear (GFX_TOP or GFX_BOTTOM)
+void clear_screen(gfxScreen_t screen);
+
+// Initializes dual screen console support
+void init_dual_screen_consoles();
+
+// Selects the player screen (bottom screen) for output
+void select_player_screen();
+
+// Selects the dealer screen (top screen) for output
+void select_dealer_screen();
+
 #endif /* FUNCTIONS_H_ */

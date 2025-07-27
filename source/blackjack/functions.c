@@ -164,6 +164,7 @@ int offer_insurance(int bet_amount, Hand *dealer_hand) {
     if (dealer_hand->num_cards >= 2 && dealer_hand->cards[1].value == 11) {
         int insurance_bet = bet_amount / 2;
         
+        select_player_screen();
         printf("Dealer shows Ace - Insurance available\n");
         printf("Insurance costs $%d (pays 2:1)\n", insurance_bet);
         printf("A = Take Insurance, B = Decline\n");
@@ -214,33 +215,38 @@ GameAction handle_player_turn(Deck *deck, Hand *player_hand, Hand *dealer_hand, 
         
         switch (action) {
             case ACTION_HIT:
+                select_player_screen();
                 printf("Player hits!\n");
                 add_card_to_hand(deck, player_hand);
                 calculate_hand_value(player_hand);
                 
                 // Refresh the entire game display with updated hands
-                display_game_status(cash, bet_amount, player_hand, dealer_hand, 1);
+                display_game_status_dual_screen(cash, bet_amount, player_hand, dealer_hand, 1);
                 
                 // Check for bust
                 if (is_busted(player_hand)) {
                     player_hand->bust = 1;
                     player_hand->stop = 1;
+                    select_player_screen();
                     printf("BUST! Player goes over 21!\n");
                 }
                 // Check for 6-card Charlie (instant win with 6 cards under 21)
                 else if (player_hand->num_cards == 6) {
                     player_hand->stop = 1;
+                    select_player_screen();
                     printf("6-Card Charlie! Player wins automatically!\n");
                 }
                 break;
                 
             case ACTION_STAND:
+                select_player_screen();
                 printf("Player stands!\n");
                 player_hand->stop = 1;
                 break;
                 
             case ACTION_DOUBLE:
                 if (can_double) {
+                    select_player_screen();
                     printf("Player doubles down!\n");
                     add_card_to_hand(deck, player_hand);
                     calculate_hand_value(player_hand);
@@ -248,13 +254,15 @@ GameAction handle_player_turn(Deck *deck, Hand *player_hand, Hand *dealer_hand, 
                     player_hand->stop = 1;
                     
                     // Refresh the entire game display with updated hands
-                    display_game_status(cash, bet_amount * 2, player_hand, dealer_hand, 1);
+                    display_game_status_dual_screen(cash, bet_amount * 2, player_hand, dealer_hand, 1);
                     
                     if (is_busted(player_hand)) {
                         player_hand->bust = 1;
+                        select_player_screen();
                         printf("BUST! Player goes over 21!\n");
                     }
                 } else {
+                    select_player_screen();
                     printf("Cannot double down!\n");
                     continue; // Ask for input again
                 }
@@ -363,6 +371,8 @@ void display_hand(Hand *hand) {
 }
 
 int determine_winner(Hand *player_hand, Hand *dealer_hand) {
+    select_player_screen();
+    
     // Player busts - dealer wins
     if (is_busted(player_hand)) {
         printf("Player busts! Dealer wins.\n");
@@ -397,15 +407,17 @@ int determine_winner(Hand *player_hand, Hand *dealer_hand) {
 void handle_dealer_turn(Deck *deck, Hand *dealer_hand) {
     // Reveal dealer's hidden card
     dealer_hand->cards[0].hidden = 0;
+    select_dealer_screen();
     printf("Dealer reveals hidden card:\n");
     calculate_hand_value(dealer_hand); // Recalculate with all cards visible
-    display_hand(dealer_hand);
+    display_hand_dual_screen(dealer_hand, GFX_TOP);
     
     // Dealer hits on 16 or less, stands on 17 or more
     while (dealer_hand->value < 17) {
+        select_dealer_screen();
         printf("Dealer must hit (value: %d)\n", dealer_hand->value);
         add_card_to_hand(deck, dealer_hand);
-        display_hand(dealer_hand);
+        display_hand_dual_screen(dealer_hand, GFX_TOP);
         
         if (is_busted(dealer_hand)) {
             dealer_hand->bust = 1;
@@ -414,6 +426,7 @@ void handle_dealer_turn(Deck *deck, Hand *dealer_hand) {
     }
     
     if (!is_busted(dealer_hand)) {
+        select_dealer_screen();
         printf("Dealer stands on %d\n", dealer_hand->value);
     }
 }
@@ -458,6 +471,7 @@ int is_natural_blackjack(Hand *hand) {
 }
 
 GameAction get_player_input(int can_double) {
+    select_player_screen();
     printf("\nChoose action:\n");
     printf("A = Hit, B = Stand");
     if (can_double) {
@@ -503,4 +517,125 @@ void display_game_status(int cash, int bet_amount, Hand *player_hand, Hand *deal
     
     // Display player hand
     display_hand(player_hand);
+}
+
+// Global console variables for dual screen support
+static PrintConsole g_topScreen, g_bottomScreen;
+static int g_consoles_initialized = 0;
+
+void init_dual_screen_consoles() {
+    if (!g_consoles_initialized) {
+        consoleInit(GFX_TOP, &g_topScreen);
+        consoleInit(GFX_BOTTOM, &g_bottomScreen);
+        g_consoles_initialized = 1;
+    }
+}
+
+void select_player_screen() {
+    init_dual_screen_consoles();
+    consoleSelect(&g_bottomScreen);
+}
+
+void select_dealer_screen() {
+    init_dual_screen_consoles();
+    consoleSelect(&g_topScreen);
+}
+
+void clear_screen(gfxScreen_t screen) {
+    init_dual_screen_consoles();
+    
+    if (screen == GFX_TOP) {
+        consoleSelect(&g_topScreen);
+    } else {
+        consoleSelect(&g_bottomScreen);
+    }
+    
+    printf("\x1b[2J\x1b[H"); // Clear screen and move cursor to home
+}
+
+void display_hand_dual_screen(Hand *hand, gfxScreen_t screen) {
+    init_dual_screen_consoles();
+    
+    if (screen == GFX_TOP) {
+        consoleSelect(&g_topScreen);
+    } else {
+        consoleSelect(&g_bottomScreen);
+    }
+    
+    printf("\n%s's hand:\n", hand->name);
+    
+    // Print card representations
+    for (int i = 0; i < hand->num_cards; i++) {
+        printf(" -----   ");
+    }
+    printf("\n");
+    
+    for (int i = 0; i < hand->num_cards; i++) {
+        if (hand->cards[i].hidden) {
+            printf("|  ?  |  ");
+        } else {
+            printf("| %-2s  |  ", hand->cards[i].sign);
+        }
+    }
+    printf("\n");
+    
+    for (int i = 0; i < hand->num_cards; i++) {
+        if (hand->cards[i].hidden) {
+            printf("|  ?  |  ");
+        } else {
+            // Use ASCII characters instead of Unicode suits for 3DS compatibility
+            char suit_char = hand->cards[i].suit[0]; // First letter of suit name
+            printf("| %c   |  ", suit_char); // S, H, C, D for Spades, Hearts, Clubs, Diamonds
+        }
+    }
+    printf("\n");
+    
+    for (int i = 0; i < hand->num_cards; i++) {
+        if (hand->cards[i].hidden) {
+            printf("|  ?  |  ");
+        } else {
+            printf("| %-2s  |  ", hand->cards[i].sign);
+        }
+    }
+    printf("\n");
+    
+    for (int i = 0; i < hand->num_cards; i++) {
+        printf(" -----   ");
+    }
+    printf("\n");
+    
+    // Show value (only visible cards for dealer if first card is hidden)
+    if (strcmp(hand->name, "Dealer") == 0 && hand->cards[0].hidden) {
+        printf("Showing: %d\n", hand->cards[1].value);
+    } else {
+        printf("Total: %d\n", hand->value);
+    }
+}
+
+void display_game_status_dual_screen(int cash, int bet_amount, Hand *player_hand, Hand *dealer_hand, int hide_dealer_card) {
+    init_dual_screen_consoles();
+    
+    // Clear both screens
+    clear_screen(GFX_TOP);
+    clear_screen(GFX_BOTTOM);
+    
+    // Display dealer on top screen
+    consoleSelect(&g_topScreen);
+    printf("3DS BlackJack - DEALER\n");
+    printf("======================\n\n");
+    
+    // Display dealer hand on top screen
+    if (hide_dealer_card && dealer_hand->num_cards > 0) {
+        dealer_hand->cards[0].hidden = 1;
+    }
+    display_hand_dual_screen(dealer_hand, GFX_TOP);
+    
+    // Display player on bottom screen
+    consoleSelect(&g_bottomScreen);
+    printf("3DS BlackJack - PLAYER\n");
+    printf("=======================\n");
+    printf("Cash: $%d | Bet: $%d\n\n", cash, bet_amount);
+    
+    // Display player hand on bottom screen
+    display_hand_dual_screen(player_hand, GFX_BOTTOM);
 }

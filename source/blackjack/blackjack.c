@@ -7,7 +7,13 @@
 int blackjack_main(int argc, char* argv[])
 {
     // Graphics already initialized by main menu
-    consoleInit(GFX_TOP, NULL);
+    // Initialize dual screen consoles
+    PrintConsole topScreen, bottomScreen;
+    consoleInit(GFX_TOP, &topScreen);
+    consoleInit(GFX_BOTTOM, &bottomScreen);
+    
+    // Initialize dual screen support in functions
+    init_dual_screen_consoles();
     
     // Game variables
     int cash = 0;
@@ -27,7 +33,8 @@ int blackjack_main(int argc, char* argv[])
     player_hand.num_cards = 0;
     dealer_hand.num_cards = 0;
     
-    // Ask for number of decks using up/down arrows
+    // Ask for number of decks using up/down arrows - show on bottom screen
+    consoleSelect(&bottomScreen);
     printf("\x1b[2J\x1b[H"); // Clear screen and move cursor to home
     printf("DECK SELECTION\n");
     printf("==============\n");
@@ -110,7 +117,7 @@ int blackjack_main(int argc, char* argv[])
         gspWaitForVBlank();
         
         // Display initial game state
-        display_game_status(cash, bet_amount, &player_hand, &dealer_hand, 1);
+        display_game_status_dual_screen(cash, bet_amount, &player_hand, &dealer_hand, 1);
         
         // Check for insurance opportunity
         insurance_payout = offer_insurance(bet_amount, &dealer_hand);
@@ -124,15 +131,18 @@ int blackjack_main(int argc, char* argv[])
             // Reveal dealer's hidden card for blackjack resolution
             dealer_hand.cards[0].hidden = 0;
             calculate_hand_value(&dealer_hand);
-            display_game_status(cash, bet_amount, &player_hand, &dealer_hand, 0);
+            display_game_status_dual_screen(cash, bet_amount, &player_hand, &dealer_hand, 0);
             
             if (player_natural && dealer_natural) {
+                select_player_screen();
                 printf("Both have Blackjack! Push!\n");
                 cash += bet_amount; // Return bet
             } else if (player_natural) {
+                select_player_screen();
                 printf("Player Blackjack! Pays 3:2\n");
                 cash += bet_amount + (bet_amount * 3 / 2); // 3:2 payout
             } else {
+                select_player_screen();
                 printf("Dealer Blackjack! Player loses.\n");
                 // Player loses bet (already deducted)
             }
@@ -148,23 +158,26 @@ int blackjack_main(int argc, char* argv[])
             if (player_hand.doubled) {
                 cash -= bet_amount;
                 bet_amount *= 2;
+                select_player_screen();
                 printf("Bet doubled to $%d\n", bet_amount);
             }
             
             // Dealer's turn (only if player didn't bust)
             if (!is_busted(&player_hand)) {
+                select_dealer_screen();
                 printf("\nDealer's turn:\n");
                 handle_dealer_turn(&deck, &dealer_hand);
             }
             
             // Display final hands
-            display_game_status(cash, bet_amount, &player_hand, &dealer_hand, 0);
+            display_game_status_dual_screen(cash, bet_amount, &player_hand, &dealer_hand, 0);
             
             // Determine winner and pay out
             int result_code = determine_winner(&player_hand, &dealer_hand);
             
             if (result_code == 1) {
                 // Player wins
+                select_player_screen();
                 if (player_hand.num_cards == 6) {
                     // 6-card Charlie pays 2:1
                     cash += bet_amount * 3;
@@ -181,6 +194,7 @@ int blackjack_main(int argc, char* argv[])
             // If result_code == -1, player loses (bet already deducted)
         }
         
+        select_player_screen();
         printf("\nCurrent cash: $%d\n", cash);
         
         // Check if player is out of money
@@ -212,6 +226,7 @@ int blackjack_main(int argc, char* argv[])
     }
     
     // Game over
+    select_player_screen();
     printf("\n========================================\n");
     printf("Game Over!\n");
     printf("Final cash: $%d\n", cash);
