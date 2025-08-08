@@ -32,9 +32,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	pbat
 BUILD		:=	build
-SOURCES		:=	source source/blackjack source/roulette
+SOURCES		:=	source source/blackjack source/roulette source/text_editor
 DATA		:=	data
-INCLUDES	:=	include source/blackjack source/roulette
+INCLUDES	:=	include source/blackjack source/roulette source/text_editor
 GRAPHICS	:=	gfx
 #GFXBUILD	:=	$(BUILD)
 

@@ -5,6 +5,7 @@
 // Function prototypes for the games
 extern int blackjack_main(int argc, char* argv[]);
 extern int roulette_main(int argc, char* argv[]);
+extern void text_editor_main(void);
 
 void show_menu() {
     printf("\x1b[2J");  // Clear screen
@@ -17,6 +18,7 @@ void show_menu() {
     printf("\n");
     printf("A - Blackjack\n");
     printf("B - Roulette\n");
+    printf("Y - Text Editor\n");
     printf("X - Exit\n");
     printf("\n");
     printf("Press the corresponding button...\n");
@@ -54,6 +56,16 @@ int main(int argc, char* argv[])
             gspWaitForVBlank();
             
             roulette_main(argc, argv);
+        }
+        else if (kDown & KEY_Y) {
+            // Launch Text Editor
+            printf("\x1b[2J");  // Clear screen
+            printf("Starting Text Editor...\n");
+            gfxFlushBuffers();
+            gfxSwapBuffers();
+            gspWaitForVBlank();
+            
+            text_editor_main();
         }
         else if (kDown & KEY_X) {
             // Exit
